@@ -1,0 +1,17 @@
+name: reproduce
+on: push
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t rep .
+      - run: docker run --rm -v "$PWD":/out --user "$(id -u):$(id -g)" rep
+      - name: Commit answers if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add answer_*.txt
+          git diff --cached --quiet || (git commit -m "Update answers" && git push)
