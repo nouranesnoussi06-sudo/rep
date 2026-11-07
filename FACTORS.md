@@ -56,4 +56,4 @@ Programme du TP1 (valeurs dans [0,1), graine 42), nombre de tirages variable dan
 | 100 000 | 82.7590 % |
 | 1 000 000 | 82.8487 % |
 
-Le nombre de tirages ne change pas la valeur moyenne mais la précision : l'incertitude statistique vaut environ sqrt(p(1-p)/N), soit ±3,8 points à 100 tirages et ±0,04 point à 10^6. Le résultat se stabilise autour de 82,8 %. Le 83,01 % du TP1 (10 000 tirages) est donc dans le bruit.
+Le nombre de tirages ne change pas la valeur moyenne mais la précision. Le résultat se stabilise autour de 82,8 %. Le 83,01 % du TP1 (10 000 tirages) est donc dans le bruit.
