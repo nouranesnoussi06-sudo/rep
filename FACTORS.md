@@ -33,14 +33,6 @@ Le LLM en Python reprend les mêmes choix que le LLM en C (même plage, même no
 
 À l'inverse, mon Python et le LLM en Python utilisent le même langage et le même type, mais donnent 83,01 % contre 93,06 %. Ce qui change entre les deux, c'est la distribution (plage des valeurs) et le nombre de tirages. La distribution est donc le facteur qui semble dominer, ce qu'aucune comparaison à deux programmes seulement ne permettait de dire.
 
-## Pistes à tester
-
-- Effet des options de compilation, notamment `-ffast-math`, sur le programme C.
-- Effet du type float32 contre float64.
-- Effet de la plage des valeurs, à N et générateur fixés.
-- Effet de la propriété testée (branche `distributivity`).
-
-La liste n'est jamais terminée : elle sera mise à jour à chaque nouveau facteur découvert.
 
 ## Résultats expérimentaux
 
