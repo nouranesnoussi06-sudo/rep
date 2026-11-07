@@ -41,3 +41,19 @@ Le LLM en Python reprend les mêmes choix que le LLM en C (même plage, même no
 - Effet de la propriété testée (branche `distributivity`).
 
 La liste n'est jamais terminée : elle sera mise à jour à chaque nouveau facteur découvert.
+
+## Résultats expérimentaux
+
+### 3.1 Paramètres d'exécution : nombre de tirages (`exp/runtime_params.py`)
+
+Programme du TP1 (valeurs dans [0,1), graine 42), nombre de tirages variable dans une seule exécution :
+
+| Tirages | Pourcentage |
+|---|---|
+| 100 | 80.0000 % |
+| 1 000 | 82.0000 % |
+| 10 000 | 83.0100 % |
+| 100 000 | 82.7590 % |
+| 1 000 000 | 82.8487 % |
+
+Le nombre de tirages ne change pas la valeur moyenne mais la précision : l'incertitude statistique vaut environ sqrt(p(1-p)/N), soit ±3,8 points à 100 tirages et ±0,04 point à 10^6. Le résultat se stabilise autour de 82,8 %. Le 83,01 % du TP1 (10 000 tirages) est donc dans le bruit.
