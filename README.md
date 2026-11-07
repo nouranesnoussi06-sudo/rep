@@ -1,51 +1,51 @@
-# Reproducibility lab 2: associativity and banking
+# TP2 reproductibilité : associativité et banque
 
-## Expected results
+## Réponses attendues
 
-| File | Expected content |
-|---|---|
-| `answer_associativity.txt` | `83.0100%` |
-| `answer_banking.txt` | `0.019992165836667903219891152066` |
-| `answer_associativity_llm.txt` | `Percentage: 93.06%` (equal results: 930600 / 1000000) |
-| `answer_banking_llm.txt` | final amount about -4.397e48 euros (wrong, see below) |
+- `answer_associativity.txt` : `83.0100%`
+- `answer_banking.txt` : `0.019992165836667903219891152066`
+- `answer_associativity_llm.txt` : `Percentage: 93.06%` (930600 égalités sur 1 000 000 tests)
+- `answer_banking_llm.txt` : montant final d'environ -4.397e48 euros (résultat faux, voir plus bas)
 
-"Same result" means identical file content, byte for byte. Both Python programs are deterministic (fixed seed 42 for the associativity one, 120-digit Decimal arithmetic for the banking one), so no tolerance is needed.
+Le "même résultat" veut dire que le contenu du fichier est strictement identique. Les deux programmes Python sont déterministes (graine fixée pour l'associativité, calcul en précision décimale pour la banque), donc on n'accepte aucune tolérance.
 
-## Choices
+## Choix faits
 
-- **Associativity (Python):** x, y, z independent and uniform in [0, 1), type float (IEEE double), N = 10 000 draws, `random.Random(42)`, exact comparison with `==`. With N = 10 000 the statistical uncertainty is about +-0.4 points.
-- **Banking (Python):** exact value of e with `decimal` at 120 digits, M_0 = e, M_k = k * (M_{k-1} - 1) for k = 1..50, then a final fee of 1 euro. The true value is about 0.02 euro (series sum_{k>=51} 50!/k!).
-- **Associativity (C, LLM):** double, x, y, z uniform in [-1 000 000, 1 000 000], N = 1 000 000, xorshift64 with a fixed seed.
-- **Banking (C, LLM):** double, starting from 2.718281828459045.
+Associativité (Python) : x, y, z tirés uniformément dans [0, 1), type float (double IEEE 754), 10 000 tirages, `random.Random(42)`, comparaison exacte avec `==`. Avec seulement 10 000 tirages, l'incertitude statistique est d'environ 0,4 point : un autre tirage donnerait un résultat proche mais pas identique.
 
-## Reproduce with Docker
+Banque (Python) : on prend la vraie valeur de e avec le module `decimal` (120 chiffres), puis pour chaque année k de 1 à 50 on enlève 1 euro et on multiplie par k, et on enlève 1 euro à la fin. La valeur exacte est d'environ 0,02 euro.
+
+## Reproduire avec Docker
 
     docker build -t rep .
     docker run --rm -v "$(pwd)":/out --user "$(id -u):$(id -g)" rep
 
-LLM version (C):
+Les deux fichiers `answer_*.txt` apparaissent dans le dossier courant. Pour la version C (partie LLM) :
 
     docker build -f Dockerfile.llm -t rep-llm .
     docker run --rm -v "$(pwd)":/out --user "$(id -u):$(id -g)" rep-llm
 
-## Reproduce with Nix
+## Reproduire avec Nix
 
     nix-shell --run ./run.sh
 
-`shell.nix` uses a pinned nixpkgs snapshot (`nixpkgs-pin.nix`).
+L'environnement est défini dans `shell.nix`, avec une version de nixpkgs fixée dans `nixpkgs-pin.nix`. Python y est en version 3.11, alors que l'image Docker utilise 3.14 : on obtient quand même les mêmes résultats.
+
+## Sans Docker ni Nix
+
+Il faut Python 3 (testé avec 3.14), sans bibliothèque externe :
+
+    OUT_DIR=. ./run.sh
 
 ## GitHub Actions
 
-On every push, `.github/workflows/reproduce.yml` builds both images, runs both containers and commits `answer_*.txt` (including the `_llm` files) if they changed. The answer files in this repository are produced by Actions.
+À chaque push, le workflow `.github/workflows/reproduce.yml` construit les deux images Docker, lance les conteneurs et commit les fichiers `answer_*.txt` s'ils ont changé. Les fichiers de réponses du dépôt sont donc produits par GitHub Actions.
 
-## LLM part and comparison
+## Partie LLM
 
-The prompts, model details and full answers are in `LLM_associativity.md` and `LLM_banking.md`.
+Les prompts, le modèle utilisé et les réponses complètes sont dans `LLM_associativity.md` et `LLM_banking.md`.
 
-| | Banking | Associativity |
-|---|---|---|
-| Hand-written Python | 0.019992165836667903... (correct) | 83.01 % |
-| C by the LLM | about -4.4e48 (wrong) | 93.06 % |
+Comparaison avec mes programmes :
 
-- **Banking:** the error on e (about 1e-16 in double) is multiplied by n at each year, so by 50! (about 3e64) at the end. The double computation is meaningless: the balance looks correct until year 16 and then diverges. The LLM did not notice that its result is absurd.
-- **Associativity:** the two percentages differ because the choices differ (range of the values, number of tests), not because of a bug. The percentage depends strongly on the distribution.
+- Banque : mon Python donne 0,019992165836667903..., qui est la bonne valeur. Le C du LLM donne environ -4,4e48. Il calcule en double : l'erreur d'arrondi sur e (environ 1e-16) est multipliée par n à chaque année, donc au total par 50! (environ 3e64). Le montant reste correct jusqu'à l'année 16 puis diverge. Le LLM ne remarque pas que son résultat est absurde.
+- Associativité : 83,01 % pour mon Python contre 93,06 % pour le C du LLM. La différence vient des choix (le LLM tire ses valeurs dans [-1 000 000, 1 000 000], moi dans [0, 1), et le nombre de tests n'est pas le même), pas d'une erreur de code. Le pourcentage dépend beaucoup de la distribution choisie.
