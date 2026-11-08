@@ -89,8 +89,8 @@ C : `exp/assoc_llm.c`, 1 000 000 tirages, graine 42, valeurs dans [-1e6, 1e6], i
 | -O2 -ffast-math | 100.0000 % | 100.0000 % |
 
 - La version du compilateur n'a aucun effet ici, les options de compilation oui.
-- `-ffast-math` autorise le compilateur à réassocier les additions : les deux membres de l'égalité deviennent le même calcul, d'où 100 %. La propriété n'est plus testée.
-- `-march=native` active l'FMA. La génération `r * (high - low) + low` est alors faite avec un seul arrondi, ce qui donne des valeurs plus précises et moins souvent exactes à l'addition. Vérification en Python avec 100 000 tirages : 92,98 % avec deux arrondis, 67,22 % avec un seul (FMA émulé). Une partie des 93 % observés sur [-1e6, 1e6] dépend donc de la façon de fabriquer les nombres, pas seulement de la plage.
-- Test causal à faire : `-O2 -march=native -ffp-contract=off` doit redonner 93,08 %.
+- `-ffast-math` : le compilateur réorganise les calculs, donc les deux côtés de l'égalité deviennent le même calcul et le résultat est toujours 100 %. La propriété n'est plus vraiment testée.
+- `-march=native` : le compilateur utilise des instructions du processeur qui font la multiplication et l'addition de la génération des nombres en un seul arrondi. Les nombres générés sont un peu différents, et le pourcentage passe de 93 % à 67 %.
 
-Nouveaux facteurs : contraction FMA (`-ffp-contract`), `-ffast-math`.
+Nouveaux facteurs : options de compilation (`-march=native`, `-ffast-math`).
+
