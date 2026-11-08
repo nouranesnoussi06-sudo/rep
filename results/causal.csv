@@ -1,0 +1,7 @@
+machine,gcc,flags,percentage
+aarch64,13,-O2 -ffp-contract=off,93.0794
+aarch64,13,-O2 -march=native,67.3535
+aarch64,13,-O2,67.3535
+x86_64,13,-O2 -ffp-contract=off,93.0794
+x86_64,13,-O2 -march=native,67.3535
+x86_64,13,-O2,93.0794
