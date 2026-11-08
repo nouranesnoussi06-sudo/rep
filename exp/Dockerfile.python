@@ -1,0 +1,5 @@
+ARG PYTHON_VERSION=3.14
+FROM python:${PYTHON_VERSION}-slim
+WORKDIR /app
+COPY exp/assoc_mine.py .
+CMD ["python", "assoc_mine.py", "--repetitions=100000", "--seed=42"]

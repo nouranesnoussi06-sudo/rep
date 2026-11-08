@@ -75,3 +75,22 @@ Arguments communs : `--repetitions`, `--seed`, `--low`, `--high`. Le script lanc
 
 - Le type des nombres a un fort effet sur l'associativité de l'addition (environ 8 points de moins en 32 bits), et un effet plus faible sur les deux autres propriétés.
 - La propriété testée change fortement la réponse (de 65 % à 83 % en 64 bits).
+
+### 3.4 Environnement de calcul (`exp/Dockerfile.python`, `exp/Dockerfile.c`)
+
+Python : `exp/assoc_mine.py`, 100 000 tirages, graine 42, dans des images python:3.10, 3.12 et 3.14. Le résultat est identique dans les trois versions.
+
+C : `exp/assoc_llm.c`, 1 000 000 tirages, graine 42, valeurs dans [-1e6, 1e6], images gcc:12 et gcc:15.
+
+| Options | gcc 12 | gcc 15 |
+|---|---|---|
+| -O2 | 93.0794 % | 93.0794 % |
+| -O2 -march=native | 67.3535 % | 67.3535 % |
+| -O2 -ffast-math | 100.0000 % | 100.0000 % |
+
+- La version du compilateur n'a aucun effet ici, les options de compilation oui.
+- `-ffast-math` autorise le compilateur à réassocier les additions : les deux membres de l'égalité deviennent le même calcul, d'où 100 %. La propriété n'est plus testée.
+- `-march=native` active l'FMA. La génération `r * (high - low) + low` est alors faite avec un seul arrondi, ce qui donne des valeurs plus précises et moins souvent exactes à l'addition. Vérification en Python avec 100 000 tirages : 92,98 % avec deux arrondis, 67,22 % avec un seul (FMA émulé). Une partie des 93 % observés sur [-1e6, 1e6] dépend donc de la façon de fabriquer les nombres, pas seulement de la plage.
+- Test causal à faire : `-O2 -march=native -ffp-contract=off` doit redonner 93,08 %.
+
+Nouveaux facteurs : contraction FMA (`-ffp-contract`), `-ffast-math`.
