@@ -1,0 +1,53 @@
+features
+    Experiment
+        mandatory
+            Property
+                alternative
+                    AssocAdd
+                    AssocMul
+                    Distributivity
+            NumberType
+                alternative
+                    Float32
+                    Float64
+            Distribution
+                alternative
+                    Unit
+                    Wide
+            Repetitions
+                alternative
+                    R10000
+                    R1000000
+            Seed
+                alternative
+                    Seed42
+                    Seed123456789
+            Language
+                alternative
+                    Python
+                        mandatory
+                            PythonVersion
+                                alternative
+                                    Py310
+                                    Py314
+                    C
+                        mandatory
+                            GccVersion
+                                alternative
+                                    Gcc12
+                                    Gcc15
+                            Flags
+                                alternative
+                                    O0
+                                    O2
+                                    O2MarchNative
+                                    O2FastMath
+            Generator
+                alternative
+                    MersenneTwister
+                    Xorshift64
+
+constraints
+    Python => MersenneTwister
+    C => Xorshift64
+    Float32 => Python
