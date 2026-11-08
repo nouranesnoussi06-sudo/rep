@@ -125,4 +125,11 @@ Nouveaux facteurs : options de compilation (`-march=native`, `-ffast-math`).
 | Architecture (x86, ARM) | Environnement (matrice de jobs GitHub Actions) | hors du programme |
 | Nombre d'exécutions par configuration | Script d'exploration | on relance plusieurs fois la même configuration |
 
-Format de la sortie : fixé, ce n'est pas un facteur étudié.
+
+## Partie 5 : échantillonnage
+
+Commande : `python sample.py fm/experiment.uvl --size 60 --seed 1 --include configs/*.csvconf -o configs/sample.csv`
+
+- Le modèle compte 288 configurations valides. L'échantillon contient 60 configurations tirées au hasard (uniformément parmi les configurations valides), plus mes trois programmes (étiquette `anchor`), soit 63 lignes.
+- Taille : 60, soit environ 20 % de l'espace. Avec 30 configurations, seulement 4 utilisaient Float32, trop peu pour mesurer son effet. Avec 60, les valeurs rares apparaissent une dizaine de fois. Chaque configuration sera exécutée plusieurs fois, donc le coût reste faible.
+- Reproductibilité : la même commande (même modèle, même graine) donne exactement le même fichier, vérifié en la lançant deux fois et en comparant avec `cmp`.
