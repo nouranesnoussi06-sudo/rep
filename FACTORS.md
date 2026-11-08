@@ -49,3 +49,29 @@ Programme du TP1 (valeurs dans [0,1), graine 42), nombre de tirages variable dan
 | 1 000 000 | 82.8487 % |
 
 Le nombre de tirages ne change pas la valeur moyenne mais la précision. Le résultat se stabilise autour de 82,8 %. Le 83,01 % du TP1 (10 000 tirages) est donc dans le bruit.
+
+### 3.2 CLI : mêmes arguments pour les trois programmes (`exp/run_cli.py`)
+
+Arguments communs : `--repetitions`, `--seed`, `--low`, `--high`. Le script lance les 3 programmes sur 4 nombres de tirages x 2 plages de valeurs x 3 graines (72 exécutions) et écrit un CSV. Moyenne sur les 3 graines à 100 000 tirages :
+
+| Plage | Mon Python | LLM Python | LLM C |
+|---|---|---|---|
+| [0, 1) | 82.76 % | 82.76 % | 82.91 % |
+| [-1e6, 1e6] | 93.05 % | 93.05 % | 92.97 % |
+
+- Mon Python et le LLM Python donnent exactement le même résultat avec les mêmes arguments (24 configurations sur 24) : leurs écarts initiaux (83 % contre 93 %) venaient de leurs valeurs par défaut, pas de la logique du code.
+- Le C n'est identique que dans 1 configuration sur 24 : il utilise un autre générateur (xorshift64 contre Mersenne Twister), donc une autre suite de nombres. Les moyennes restent très proches : l'écart est du bruit statistique.
+- La plage des valeurs est le facteur dominant (environ 83 % contre environ 93 %).
+
+### 3.3 Template : propriété testée et type des nombres (`exp/assoc.py.jinja`, `exp/generate.py`)
+
+100 000 tirages, graine 42, valeurs dans [0, 1) :
+
+| Propriété | float64 | float32 |
+|---|---|---|
+| (x+y)+z == x+(y+z) | 82.759 % | 74.616 % |
+| (x*y)*z == x*(y*z) | 65.131 % | 64.990 % |
+| x*(y+z) == x*y+x*z | 68.728 % | 64.782 % |
+
+- Le type des nombres a un fort effet sur l'associativité de l'addition (environ 8 points de moins en 32 bits), et un effet plus faible sur les deux autres propriétés.
+- La propriété testée change fortement la réponse (de 65 % à 83 % en 64 bits).
