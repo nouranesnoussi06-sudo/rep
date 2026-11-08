@@ -1,0 +1,115 @@
+name: experiment
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/experiment.yml"
+      - "exp/**"
+      - "fm/**"
+      - "configs/*.csvconf"
+      - "sample.py"
+permissions:
+  contents: write
+jobs:
+  sample:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install flamapy==2.6.0
+      - run: python sample.py fm/experiment.uvl --size 60 --seed 1 --include configs/*.csvconf -o configs/sample.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sample
+          path: configs/sample.csv
+
+  python-runs:
+    needs: sample
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+        python-version: ["3.10", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: sample
+          path: configs
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install jinja2 numpy
+      - run: python exp/run_sample.py --match-env --repeats 5 -o parts/python-${{ matrix.python-version }}-${{ matrix.os }}.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results-python-${{ matrix.python-version }}-${{ matrix.os }}
+          path: parts
+          if-no-files-found: ignore
+
+  c-runs:
+    needs: sample
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+        gcc: ["12", "15"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: sample
+          path: configs
+      - run: |
+          docker run --rm -v "$PWD":/work -w /work gcc:${{ matrix.gcc }} bash -c \
+            "apt-get update -qq && apt-get install -y -qq python3 python3-jinja2 && python3 exp/run_sample.py --match-env --repeats 5 -o parts/c-${{ matrix.gcc }}-${{ matrix.os }}.csv"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results-c-${{ matrix.gcc }}-${{ matrix.os }}
+          path: parts
+          if-no-files-found: ignore
+
+  merge:
+    needs: [python-runs, c-runs]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          path: parts
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: sample
+          path: configs
+      - name: Merge the parts into results/results.csv
+        run: |
+          python3 - << 'PYEOF'
+          import csv, glob
+          from pathlib import Path
+          files = sorted(glob.glob("parts/*.csv"))
+          rows = []
+          for path in files:
+              rows += list(csv.DictReader(open(path)))
+          rows.sort(key=lambda r: (r["config_id"], r["machine"], r["python_actual"],
+                                   r["gcc_actual"], int(r["run"])))
+          Path("results").mkdir(exist_ok=True)
+          with open("results/results.csv", "w", newline="") as f:
+              writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+              writer.writeheader()
+              writer.writerows(rows)
+          print(len(rows), "rows from", len(files), "files")
+          PYEOF
+      - name: Commit results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add results/results.csv configs/sample.csv
+          git diff --cached --quiet || (git commit -m "Update results" && git push)

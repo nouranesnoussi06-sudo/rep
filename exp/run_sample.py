@@ -91,6 +91,10 @@ def main():
                 "command": " ".join(command + arguments),
             })
 
+    if not rows:
+        print("no configuration matches this environment, nothing written")
+        return
+
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", newline="") as f:
