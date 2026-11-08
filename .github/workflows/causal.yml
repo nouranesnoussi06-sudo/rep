@@ -1,0 +1,49 @@
+name: causal
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fma:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and run with and without FMA contraction
+        run: |
+          mkdir -p parts
+          out=parts/causal-${{ matrix.os }}.csv
+          for flags in "-O2" "-O2 -ffp-contract=off" "-O2 -march=native"; do
+            gcc $flags -o assoc exp/assoc_llm.c
+            pct=$(./assoc --repetitions=1000000 --seed=42 --low=-1000000 --high=1000000 | sed 's/.*"percentage": \([0-9.]*\).*/\1/')
+            echo "$(uname -m),$(gcc -dumpversion),$flags,$pct" >> $out
+          done
+          cat $out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: causal-${{ matrix.os }}
+          path: parts
+
+  merge:
+    needs: fma
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: causal-*
+          path: parts
+          merge-multiple: true
+      - name: Commit the results
+        run: |
+          mkdir -p results
+          (echo "machine,gcc,flags,percentage"; cat parts/causal-*.csv | sort) > results/causal.csv
+          cat results/causal.csv
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add results/causal.csv
+          git diff --cached --quiet || (git commit -m "Update causal results" && git push)
