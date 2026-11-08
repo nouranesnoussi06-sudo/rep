@@ -4,7 +4,7 @@
 
 | Programme | Langage / environnement | Type | Distribution | Tirages | Générateur (graine) | Comparaison | Résultat |
 |---|---|---|---|---|---|---|---|
-| Le mien (TP1) | Python (3.14 sous Docker, 3.11 sous Nix) | float (double) | uniforme [0,1) via `random()` | 10 000 | Mersenne Twister, `Random(42)` | `==` | 83,01 % |
+| Le mien (TP1) | Python (3.14 sous Docker, 3.11 sous Nix) | float (double) | uniforme [0,1] via `random()` | 10 000 | Mersenne Twister, `Random(42)` | `==` | 83,01 % |
 | LLM en C (TP2) | C, gcc:15 sous Docker | double | uniforme [-1e6, 1e6], à partir de 53 bits aléatoires | 1 000 000 | xorshift64 (123456789) | `==` | 93,06 % (930600 sur 10^6) |
 | LLM en Python (TP3, nouveau) | Python 3, machine locale | float (double) | uniforme [-1e6, 1e6] via `random.uniform` | 1 000 000 | Mersenne Twister (123456789) | `==` | 93,06 % (930606 sur 10^6) |
 
@@ -14,7 +14,7 @@
 |---|---|
 | Propriété testée | associativité de +, associativité de *, distributivité, x * (1/x) == 1 |
 | Type des nombres | float32, float64 (double), long double |
-| Distribution et plage des valeurs | [0,1), [-1,1], [-1e6, 1e6], loi normale, échelles très différentes |
+| Distribution et plage des valeurs | [0,1], [-1,1], [-1e6, 1e6], loi normale, échelles très différentes |
 | Façon de fabriquer le nombre aléatoire | `random()`, `uniform(a, b)`, bits aléatoires * (b - a) + a |
 | Nombre de tirages | de 100 à 10 000 000 |
 | Générateur pseudo-aléatoire | Mersenne Twister, xorshift64, autre |
@@ -38,7 +38,7 @@ Le LLM en Python reprend les mêmes choix que le LLM en C (même plage, même no
 
 ### 3.1 Paramètres d'exécution : nombre de tirages (`exp/runtime_params.py`)
 
-Programme du TP1 (valeurs dans [0,1), graine 42), nombre de tirages variable dans une seule exécution :
+Programme du TP1 (valeurs dans [0,1], graine 42), nombre de tirages variable dans une seule exécution :
 
 | Tirages | Pourcentage |
 |---|---|
@@ -56,7 +56,7 @@ Arguments communs : `--repetitions`, `--seed`, `--low`, `--high`. Le script lanc
 
 | Plage | Mon Python | LLM Python | LLM C |
 |---|---|---|---|
-| [0, 1) | 82.76 % | 82.76 % | 82.91 % |
+| [0, 1] | 82.76 % | 82.76 % | 82.91 % |
 | [-1e6, 1e6] | 93.05 % | 93.05 % | 92.97 % |
 
 - Mon Python et le LLM Python donnent exactement le même résultat avec les mêmes arguments (24 configurations sur 24) : leurs écarts initiaux (83 % contre 93 %) venaient de leurs valeurs par défaut, pas de la logique du code.
@@ -65,7 +65,7 @@ Arguments communs : `--repetitions`, `--seed`, `--low`, `--high`. Le script lanc
 
 ### 3.3 Template : propriété testée et type des nombres (`exp/assoc.py.jinja`, `exp/generate.py`)
 
-100 000 tirages, graine 42, valeurs dans [0, 1) :
+100 000 tirages, graine 42, valeurs dans [0, 1] :
 
 | Propriété | float64 | float32 |
 |---|---|---|
@@ -94,21 +94,6 @@ C : `exp/assoc_llm.c`, 1 000 000 tirages, graine 42, valeurs dans [-1e6, 1e6], i
 
 Nouveaux facteurs : options de compilation (`-march=native`, `-ffast-math`).
 
-
-## 3.5 Mécanisme choisi pour chaque facteur
-
-| Facteur | Mécanisme | Pourquoi |
-|---|---|---|
-| Nombre de tirages | CLI (`--repetitions`) | simple valeur lue par le programme |
-| Graine | CLI (`--seed`) | idem |
-| Bornes des valeurs (plage) | CLI (`--low`, `--high`) | idem |
-| Propriété testée | Template (`lhs`, `rhs`) | change le code lui-même |
-| Type des nombres (float32 / float64) | Template (`dtype`) | change le type dans le code |
-| Langage et générateur aléatoire | Choix du programme (mon Python, LLM Python, LLM C) | chaque programme a son langage et son générateur |
-| Version de Python / de gcc | Environnement (argument de build Docker) | hors du programme |
-| Options de compilation (`-O2`, `-march=native`, `-ffast-math`) | Environnement (argument de build Docker) | hors du programme |
-| Architecture (x86, ARM) | Environnement (matrice de jobs GitHub Actions) | hors du programme |
-| Nombre d'exécutions par configuration | Script d'exploration | on relance plusieurs fois la même configuration |
 
 ## 3.5 Mécanisme choisi pour chaque facteur
 
