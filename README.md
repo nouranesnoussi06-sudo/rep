@@ -65,7 +65,7 @@ Comparaison avec mes programmes :
 | `sample.py`, `configs/` | échantillonnage reproductible et ses sorties (`configs/sample.csv`) |
 | `results/results.csv` | résultats des 630 exécutions, produits par GitHub Actions |
 | `results/causal.csv` | test causal sur la contraction FMA, produit par GitHub Actions |
-| `analysis.ipynb` | analyse des résultats (arbre de décision, recommandations) |
+| `anal.ipynb` | analyse des résultats (arbre de décision, recommandations) |
 | `.github/workflows/` | `reproduce.yml` (TP2), `experiment.yml` (résultats du TP3), `causal.yml` (test causal) |
 
 ## TP3 : variabilité
@@ -96,7 +96,7 @@ Notebook : `pip install jupyterlab pandas matplotlib scikit-learn`, ouvrir `anal
 - Les versions de Python (3.10, 3.14) et de gcc (12, 15) n'ont pas d'effet observé.
 - L'écart entre 83 % (TP1) et 93 % (TP2) vient surtout de la plage des valeurs et de la façon de fabriquer les nombres aléatoires, pas du langage ni du générateur.
 
-Détails, recommandations et limites : `analysis.ipynb`.
+Détails, recommandations et limites : `anal.ipynb`.
 
 ## Usage de l'IA
 
