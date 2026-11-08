@@ -1,0 +1,17 @@
+import argparse, json, random
+import numpy as np
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--repetitions", type=int, required=True)
+parser.add_argument("--seed", type=int, required=True)
+parser.add_argument("--low", type=float, required=True)
+parser.add_argument("--high", type=float, required=True)
+args = parser.parse_args()
+
+rng = random.Random(args.seed)
+holds = 0
+for _ in range(args.repetitions):
+    x, y, z = ({{ dtype }}(args.low + (args.high - args.low) * rng.random()) for _ in range(3))
+    if {{ lhs }} == {{ rhs }}:
+        holds += 1
+print(json.dumps({"percentage": 100 * holds / args.repetitions}))
