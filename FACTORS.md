@@ -94,3 +94,20 @@ C : `exp/assoc_llm.c`, 1 000 000 tirages, graine 42, valeurs dans [-1e6, 1e6], i
 
 Nouveaux facteurs : options de compilation (`-march=native`, `-ffast-math`).
 
+
+## 3.5 Mécanisme choisi pour chaque facteur
+
+| Facteur | Mécanisme | Pourquoi |
+|---|---|---|
+| Nombre de tirages | CLI (`--repetitions`) | simple valeur lue par le programme |
+| Graine | CLI (`--seed`) | idem |
+| Bornes des valeurs (plage) | CLI (`--low`, `--high`) | idem |
+| Propriété testée | Template (`lhs`, `rhs`) | change le code lui-même |
+| Type des nombres (float32 / float64) | Template (`dtype`) | change le type dans le code |
+| Langage et générateur aléatoire | Choix du programme (mon Python, LLM Python, LLM C) | chaque programme a son langage et son générateur |
+| Version de Python / de gcc | Environnement (argument de build Docker) | hors du programme |
+| Options de compilation (`-O2`, `-march=native`, `-ffast-math`) | Environnement (argument de build Docker) | hors du programme |
+| Architecture (x86, ARM) | Environnement (matrice de jobs GitHub Actions) | hors du programme |
+| Nombre d'exécutions par configuration | Script d'exploration | on relance plusieurs fois la même configuration |
+
+Format de la sortie : fixé, ce n'est pas un facteur étudié.
